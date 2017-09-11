@@ -15,17 +15,6 @@ if (!$con){
 	die('DB connection failed: '.mysqli_error($con));
 }
 	
-//Look up the clue and time limit
-$sql = "SELECT Clue, AnswerTime, DasherID FROM lobby";
-$sql .= " WHERE LobbyID=".$_SESSION['Lobby_ID'];
-if(!$result = mysqli_query($con, $sql)){
-	echo('Cant find code for this lobby');
-}	
-while($row = mysqli_fetch_row($result)){
-	$clue = $row[0];
-	$timeleft = $row[1]*60;
-	$dasherid = $row[2];
-}
 
 //if host, set up new game and change game state of lobby
 if(isset($_SESSION['Host'])){
@@ -35,9 +24,18 @@ if(isset($_SESSION['Host'])){
 		echo('Unable to check if we already created game');
 	}
 	if(mysqli_num_rows($result) == 0){
+		//pull players who didn't check in recently out of the lobby/game
+		$sql = "UPDATE players SET LobbyID=NULL WHERE LastCheck <= (NOW() - INTERVAL 30 SECOND) AND LobbyID=".$_SESSION['Lobby_ID'];
+		if(!mysqli_query($con, $sql)){
+			echo('Unable to remove idle players');
+		}
+		
 		//create new game 
-		$sql = "INSERT INTO games (LobbyID, Clue, DasherID) VALUES (";
-		$sql .= $_SESSION['Lobby_ID'].", '".mysql_real_escape_string($clue)."', ".$dasherid.")";
+		$sql = "INSERT INTO games g (g.LobbyID, g.ReaderID) VALUES (";
+		$sql .= $_SESSION['Lobby_ID'].", (SELECT IF(ISNULL(MIN(p.PlayerID)),";
+		$sql .= " (SELECT MIN(f.PlayerID) FROM players f WHERE f.LobbyID=".$_SESSION['Lobby_ID']."), MIN(p.PlayerID))";
+		$sql .= "FROM players p, lobby l, games g1 WHERE g1.GameID = l.GameID AND l.LobbyID=".$_SESSION['Lobby_ID'];
+		$sql .= "AND p.LobbyID =".$_SESSION['Lobby_ID']." AND p.PlayerID > g1.ReaderID))";
 		if(!mysqli_query($con, $sql)){
 			echo('Unable to create Game');
 		}
@@ -53,17 +51,6 @@ if(isset($_SESSION['Host'])){
 			echo('Unable to sync Game to Lobby');
 		}
 		
-		//pull players who didn't check in recently out of the lobby/game
-		$sql = "UPDATE players SET LobbyID=NULL WHERE LastCheck <= (NOW() - INTERVAL 30 SECOND) AND LobbyID=".$_SESSION['Lobby_ID'];
-		if(!mysqli_query($con, $sql)){
-			echo('Unable to remove idle players');
-		}
-		
-		//set a random order for player names/answers/scores to appear for this game
-		$sql = "UPDATE players SET OrderVal=RAND() WHERE LobbyID=".$_SESSION['Lobby_ID'];
-		if(!mysqli_query($con, $sql)){
-			echo('Unable to randomize player order');
-		}
 	}
 }
 
@@ -81,10 +68,6 @@ mysqli_close($con);
 ?>
   
 <div class="container">
-	<div class="row well well-sm">
-		<div class="col-xs-8"><?php echo htmlspecialchars($clue) ?></div>
-	  	<div class="col-xs-4">Time Left: <span id="countdown" data-timeleft="<?php echo htmlspecialchars($timeleft) ?>"></span></div>
-  	</div>
 	
     	<div class="input-group">
       		<textarea class="form-control custom-control" rows="3" placeholder="Enter your answer" name="answertxt" id="answertxt"></textarea>
