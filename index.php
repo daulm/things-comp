@@ -61,8 +61,8 @@ function mainMenu(mode){
 			case "answer":
 				launchGame();
 				break;
-			case "vote":
-				launchVote(0);
+			case "complete":
+				launchGame();
 				break;
 			case "results":
 				launchVote(0);
