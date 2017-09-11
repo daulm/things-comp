@@ -17,28 +17,20 @@ if (!$con){
 $donevote = FALSE;
 $action_type = $_GET['mode'];
 switch ($action_type){
-	case "skip":
-		//The user did not submit a vote insert a blank vote anyway
-		$sql = "INSERT INTO votes (AnswerID, PlayerID, GameID) VALUES (0, ";
-		$sql .= $_SESSION['Player_ID'].", ".$_SESSION['Game_ID'].")";
-		if(!mysqli_query($con, $sql)){
-			echo('Unable to save decision');
-		}
-		break;
 	case "submit":
-		$sql = "INSERT INTO votes (AnswerID, PlayerID, GameID) VALUES (";
-		$sql .= $_POST['ansid'].", ".$_SESSION['Player_ID'].", ".$_SESSION['Game_ID'].")";
+		// Add the answer
+		$sql = "INSERT IGNORE INTO answers (GameID, PlayerID, AnswerText, OrderVal) VALUES (";
+		$sql .= $_SESSION['Game_ID'].", ".$_SESSION['Player_ID'].", '".mysql_real_escape_string($_POST['ans'])."', RAND())";
 		if(!mysqli_query($con, $sql)){
-			echo('Unable to save vote');
-		}		
-		break;
+			echo('Unable to submit the answer');
+		}
 	case "endvote":
 		$donevote = TRUE;
 		break;
 	default:
 }
 
-if(isset($_SESSION['Dasher'])){
+if(isset($_SESSION['Reader'])){
 	//check if the time is up
 	$sql = "SELECT l.VoteTime*60 - TIME_TO_SEC(TIMEDIFF(NOW(), g.LaunchVoteTime))";
 	$sql .= " FROM lobby l, games g WHERE l.GameID = g.GameID AND l.LobbyID =".$_SESSION['Lobby_ID'];
@@ -67,37 +59,6 @@ if(isset($_SESSION['Dasher'])){
 			echo('Unable to check if we already created game');
 		}
 		if(mysqli_num_rows($result) == 0){
-
-
-			//players who submitted the correct answer
-			$sql = "UPDATE players p SET p.Score=p.Score+3 WHERE p.PlayerID IN";
-			$sql .= " (SELECT a1.PlayerID FROM answers a1, answers a2 WHERE a2.PlayerID =".$_SESSION['Player_ID'];
-			$sql .= " AND a2.AnswerID!=0 AND a1.BindAnswerID = a2.AnswerID AND a1.GameID=".$_SESSION['Game_ID'].")";
-			if(!mysqli_query($con, $sql)){
-				echo('Unable to score correct answers');
-			}
-			//players who voted for the correct answer
-			$sql = "UPDATE players p SET p.Score=p.Score+2 WHERE p.PlayerID IN";
-			$sql .= " (SELECT v.PlayerID FROM votes v, answers a WHERE v.AnswerID = a.AnswerID";
-			$sql .= " AND a.GameID=".$_SESSION['Game_ID']." AND a.PlayerID=".$_SESSION['Player_ID'].")";
-			if(!mysqli_query($con, $sql)){
-				echo('Unable to score correct votes');
-			}		
-			//players who received votes
-			$sql = "UPDATE players p SET p.Score=p.Score+(SELECT COUNT(v.VoteID) FROM votes v, answers a";
-			$sql .= " WHERE a.PlayerID=p.PlayerID AND v.AnswerID=a.AnswerID AND a.GameID=".$_SESSION['Game_ID'];
-			$sql .= ") WHERE p.LobbyID=".$_SESSION['Lobby_ID']." AND p.PlayerID!=".$_SESSION['Player_ID'];
-			if(!mysqli_query($con, $sql)){
-				echo('Unable to score correct votes');
-			}
-			//players who had the same answer as one that got votes
-			$sql = "UPDATE players p SET p.Score=p.Score+(SELECT COUNT(v.VoteID) FROM votes v, answers a, answers ab";
-			$sql .= " WHERE a.PlayerID=p.PlayerID AND v.AnswerID=a.BindAnswerID AND a.GameID=".$_SESSION['Game_ID'];
-			$sql .= " AND ab.AnswerID=a.BindAnswerID AND ab.PlayerID!=".$_SESSION['Player_ID'].") WHERE p.LobbyID=".$_SESSION['Lobby_ID'];
-			if(!mysqli_query($con, $sql)){
-				echo('Unable to score votes for matching answers');
-			}
-
 			//update the game state
 			$sql = "UPDATE lobby SET GameState='complete' WHERE LobbyID=".$_SESSION['Lobby_ID'];
 			if(!mysqli_query($con, $sql)){
