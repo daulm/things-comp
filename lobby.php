@@ -151,10 +151,10 @@ if(!$playerlist = mysqli_query($con, $sql)){
 ?>
 <span id="msglist" data-gamestate="<?php echo $gamestate ?>"></span>
 <div id="titleback">
-	<div class="text-center" id="title">BALDERDASH</div>
+	<div class="text-center" id="title">The Game of Things</div>
 </div>
 <div class="container-fluid">
-	<div class="col-xs-6"><h2 class="text-left">Room Code:<b> <?php echo $code ?></b></h2></div>
+	<h2 class="text-center">Room Code:<b> <?php echo $code ?></b></h2>
 </div>
 <div id="players" class="container-fluid">
 <?php
