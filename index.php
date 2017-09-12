@@ -31,7 +31,7 @@ function mainMenu(mode){
 				launchGame();
 				break;
 			case "complete":
-				launchGame();
+				showResults();
 				break;
 			default:
 		
@@ -55,7 +55,6 @@ function showLobby(){
 			launchGame();
 		} else {
 			refresh_results = false;
-			refresh_review = false;
 			setTimeout(showLobby, refresh_speed);
 		}
 	});
@@ -107,9 +106,7 @@ function returnLobby(){
 		$("#bd_content").html(result);
 	});
 	refresh_results = false;
-	refresh_review = false;
 	refresh_lobby = true;
-	$voterun = false;
 	setTimeout(showLobby, refresh_speed);
 }
 	
