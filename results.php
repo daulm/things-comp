@@ -24,7 +24,7 @@ switch ($action_type){
 		if(!mysqli_query($con, $sql)){
 			echo('Unable to submit the answer');
 		}
-	case "endvote":		
+	case "endans":		
 		$doneans = TRUE;
 		//We could have a query here that pulls players from the lobby who haven't submitted answers
 		// otherwise answers and players might pop in after the rest of the answers were read
@@ -69,7 +69,7 @@ if($gamestate != "complete"){
 		}
 		if($_SESSION['Reader_ID'] == $_SESSION['Player_ID']){
 			//show the button to end the answer window
-			echo '<div class="container text-center"><button type="button" class="btn btn-danger" onclick="endVoting()">End time for submitting answers</button></div>';
+			echo '<div class="container text-center"><button type="button" class="btn btn-danger" onclick="endAnswers()">End time for submitting answers</button></div>';
 		}
 	}
 	if($_SESSION['Reader_ID'] == $_SESSION['Player_ID'] && $doneans){
