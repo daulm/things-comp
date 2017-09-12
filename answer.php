@@ -10,7 +10,7 @@ session_start();
 if (!isset($_SESSION['Player_ID'])){
 	die('Session lost, please reload the app.');
 }
-$con = mysqli_connect($db_host, $db_username, $db_pw, 'balderdash');
+$con = mysqli_connect($db_host, $db_username, $db_pw, 'things');
 if (!$con){
 	die('DB connection failed: '.mysqli_error($con));
 }
