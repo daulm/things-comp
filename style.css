@@ -15,14 +15,15 @@ h2{
 }
 
 #titleback{
-	background-color: rgb(64,40,100);
+	background-color: white;
 	padding: 2px;
+	border: 5px solid YellowGreen;
 }
 
 #title{
 	font-family: 'Asset';
 	font-weight: 900;
-	color: white;
+	color: DarkGreen;
 	font-size: 1.4em;
 	    /* Rotate div */
     	-ms-transform: rotate(-2deg); /* IE 9 */
