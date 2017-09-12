@@ -54,14 +54,20 @@ if(isset($_SESSION['Host'])){
 	}
 }
 
-//set the gameid to the session
-$sql = "SELECT MAX(GameID) FROM lobby";
-$sql .= " WHERE LobbyID=".$_SESSION['Lobby_ID'];
+//set the gameid and readerid to the session
+$sql = "SELECT l.GameID, g.ReaderID FROM lobby l, games g";
+$sql .= " WHERE g.GameID - l.GameID l.LobbyID=".$_SESSION['Lobby_ID'];
 if(!$result = mysqli_query($con, $sql)){
 	echo('Cant find code for this lobby');
 }	
 while($row = mysqli_fetch_row($result)){
 	$_SESSION['Game_ID'] = $row[0];
+	$_SESSION['Reader_ID'] = $row[1];
+}
+
+if($_SESSION['Reader_ID'] == $_SESSION['Player_ID']){
+	
+	echo '<div class="container alert alert-info"><strong>Note </strong>You were selected to read the answers out loud.</div>';
 }
 	
 mysqli_close($con);
@@ -74,6 +80,7 @@ mysqli_close($con);
         	<span class="input-group-addon btn btn-primary" type="button" onclick="submitAnswer(1)">Submit</span>
     	</div>
 </div>	
+
 <span id="msglist" data-gamestate="answer"></span>
 
 <div id="footer" class="container text-center"><button type="button" class="btn btn-warning" onclick="if(confirm('You want to Quit?')){mainMenu(1)}">Quit to Main</button></div>
