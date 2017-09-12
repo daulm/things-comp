@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css?family=Asset');
+
+body{font-size: 20px;}
+
+@media (min-width: 768px) {
+    body{font-size: 24px;}
+}
+
+@media (min-width: 1000px) {
+    body{font-size: 30px;}
+}
+
+h2{
+	font-size: 0.875em;
+}
+
+#titleback{
+	background-color: rgb(64,40,100);
+	padding: 2px;
+}
+
+#title{
+	font-family: 'Asset';
+	font-weight: 900;
+	color: white;
+	font-size: 1.4em;
+	    /* Rotate div */
+    	-ms-transform: rotate(-2deg); /* IE 9 */
+    	-webkit-transform: rotate(-2deg); /* Chrome, Safari, Opera */
+    	transform: rotate(-2deg);
+}
