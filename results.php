@@ -10,11 +10,11 @@ session_start();
 if (!isset($_SESSION['Player_ID'])){
 	die('Session lost, please reload the app.');
 }
-$con = mysqli_connect($db_host, $db_username, $db_pw, 'balderdash');
+$con = mysqli_connect($db_host, $db_username, $db_pw, 'things');
 if (!$con){
 	die('DB connection failed: '.mysqli_error($con));
 }
-$donevote = FALSE;
+$doneans = FALSE;
 $action_type = $_GET['mode'];
 switch ($action_type){
 	case "submit":
@@ -24,112 +24,95 @@ switch ($action_type){
 		if(!mysqli_query($con, $sql)){
 			echo('Unable to submit the answer');
 		}
-	case "endvote":
-		$donevote = TRUE;
+	case "endvote":		
+		$doneans = TRUE;
+		//We could have a query here that pulls players from the lobby who haven't submitted answers
+		// otherwise answers and players might pop in after the rest of the answers were read
+		
 		break;
+	case "showall":
+		$sql = "UPDATE lobby SET GameState='complete' WHERE LobbyID=".$_SESSION['Lobby_ID'];
+		if(!mysqli_query($con, $sql)){
+			echo('Unable to mark game as complete');
+		}
 	default:
 }
-
-if(isset($_SESSION['Reader'])){
-	//check if the time is up
-	$sql = "SELECT l.VoteTime*60 - TIME_TO_SEC(TIMEDIFF(NOW(), g.LaunchVoteTime))";
-	$sql .= " FROM lobby l, games g WHERE l.GameID = g.GameID AND l.LobbyID =".$_SESSION['Lobby_ID'];
-	if(!$result = mysqli_query($con, $sql)){
-		echo('Cant find voting timeout');
-	}
-	$row = mysqli_fetch_row($result);
-	if($row[0] < -10){
-		$donevote = TRUE;
-	}
+	
+//check the game state
+$sql = "SELECT GameState FROM Lobby WHERE LobbyID=".$_SESSION['Lobby_ID'];
+if(!$result = mysqli_query($con, $sql)){
+	echo('Unable to check the game state');
+}
+$row = mysqli_fetch_row($result);
+$gamestate = $row[0];
+echo '<span id="msglist" data-gamestate="'.$gamestate.'"></span>';
+	
+if($gamestate != "complete"){
+	//People are still voting/reviewing
+	echo '<div class="container alert alert-danger"> Please wait for players to complete their answers</div>';
+	
 	// check if all players have submitted votes
-	$sql = "SELECT p.PlayerID FROM players p, lobby l";
+	$sql = "SELECT p.PlayerID, p.PlayerName FROM players p, lobby l";
 	$sql .= " WHERE p.LobbyID = l.LobbyID AND l.LobbyID=".$_SESSION['Lobby_ID'];
-	$sql .= " AND NOT EXISTS (SELECT v.VoteID FROM votes v WHERE v.PlayerID = p.PlayerID";
-	$sql .= " AND v.GameID = l.GameID)";
-	if(!$result = mysqli_query($con, $sql)){
+	$sql .= " AND NOT EXISTS (SELECT a.AnswerID FROM answers a WHERE a.PlayerID = p.PlayerID";
+	$sql .= " AND a.GameID = l.GameID) ORDER BY p.PlayerID";
+	if(!$slowplayers = mysqli_query($con, $sql)){
 		echo('Cant check whether voting is done.');
 	}		
-	if(mysqli_num_rows($result) == 0){
-		$donevote = TRUE;	
+	if(mysqli_num_rows($slowplayers) == 0){
+		$doneans = TRUE;	
+	} else {
+		// display the players yet to vote
+		while($row = mysqli_fetch_row($slowplayers)){
+			echo '<div class="container text-center alert alert-info">'.$row[1].'</div>';
+			
+		}
+		if($_SESSION['Reader_ID'] == $_SESSION['Player_ID']){
+			//show the button to end the answer window
+			echo '<div class="container text-center"><button type="button" class="btn btn-danger" onclick="endVoting()">End time for submitting answers</button></div>';
+		}
 	}
-	if($donevote){
-		// make sure we haven't already updated scores
-		$sql = "SELECT * FROM Lobby WHERE GameState='complete' AND LobbyID=".$_SESSION['Lobby_ID'];
+	if($_SESSION['Reader_ID'] == $_SESSION['Player_ID'] && $doneans){
+		//view list of answers to be read out
+		$sql = "SELECT AnswerText FROM answers WHERE GameID=".$_SESSION['Game_ID']." ORDER BY OrderVal";
 		if(!$result = mysqli_query($con, $sql)){
-			echo('Unable to check if we already created game');
+			echo('Cant find answers.');
 		}
-		if(mysqli_num_rows($result) == 0){
-			//update the game state
-			$sql = "UPDATE lobby SET GameState='complete' WHERE LobbyID=".$_SESSION['Lobby_ID'];
-			if(!mysqli_query($con, $sql)){
-				echo('Unable to sync Game to Lobby');
-			}
+		while($row = mysqli_fetch_row($result)){
+			echo '<div class="container well well-sm">'.$row[0].'</div>';
 		}
-		
-	} else {
-		//show a waiting message
-		?>
-		<div class="container alert alert-danger"> Please wait for players to complete voting</div>
-		<div id="footer" class="container text-center"><button type="button" class="btn btn-danger" onclick="endVoting()">Close voting</button></div>
-		<?php
+		echo '<div class="container text-center"><button type="button" class="btn btn-info" onclick="showAll()"Done reading, show all players the options</button></div>';
 	}
+	
+
 } else {
-	//check the game state
-	$sql = "SELECT * FROM Lobby WHERE GameState='complete' AND LobbyID=".$_SESSION['Lobby_ID'];
+	//show the game board
+	echo '<div class="container-fluid"><div class="col-xs-4">';
+	//pull the players
+	$sql = "SELECT PlayerName FROM players WHERE LobbyID=".$_SESSION['Lobby_ID']." ORDER BY PlayerID";
 	if(!$result = mysqli_query($con, $sql)){
-		echo('Unable to check if we already created game');
+		echo('Cant find the players.');
 	}
-	if(mysqli_num_rows($result) == 0){
-		//People are still voting
-		echo '<div class="container alert alert-danger"> Please wait for players to complete voting</div>';
-		
-	} else {
-		$donevote = TRUE;
+	while($row = mysqli_fetch_row($result)){
+		echo '<div class="row"><button type="button" class="btn btn-success btn-block" style="white-space: normal;" onclick="$(this).toggleClass(\'btn-success\')">'.$row[0].'</button></div>';
 	}
+	echo '</div><div class="col-xs-8">';
+	//pull the answers
+	$sql = "SELECT AnswerText FROM Answers WHERE GameID=".$_SESSION['Game_ID']." ORDER BY OrderVal";
+	if(!$result = mysqli_query($con, $sql)){
+		echo('Cant find the answers.');
+	}
+	while($row = mysqli_fetch_row($result)){
+		echo '<div class="row"><button type="button" class="btn btn-success btn-block" style="white-space: normal;" onclick="$(this).toggleClass(\'btn-success\')">'.$row[0].'</button></div>';
+	}
+	echo '</div></div>';	
+	
 }
 	
-if($donevote){
-
-	//pull all answers and their votes
-	$sql = "SELECT a.AnswerID, a.AnswerText, p.PlayerName, p.PlayerID, p.Score, vp.PlayerName, vp.PlayerID, g.DasherID";
-	$sql .= " FROM games g, players p, answers a LEFT JOIN votes v JOIN players vp ON vp.PlayerID = v.PlayerID ON a.AnswerID = v.AnswerID";
-	$sql .= " WHERE a.PlayerID = p.PlayerID AND a.GameID = g.GameID AND a.GameID=".$_SESSION['Game_ID'];
-	$sql .= " ORDER BY ISNULL(vp.PlayerName), a.AnswerID"; 
-	if(!$result = mysqli_query($con, $sql)){
-		echo('Cant find list of answers/votes.');
-	}
-	$previd = 0;
-	echo '<div><div>';  //these divs won't contain anything, but each new row <div> must close out last row
-	while($row = mysqli_fetch_row($result)){
-		// 0-ansid 1-anstxt 2-name 3-playerid 4-score 5-votername 6-voterid
-		if($previd == $row[0]){
-			// we already created the table row, just add the new voter
-			echo '<div class="row"><span class="label label-'.$rstyle.'">'.$row[5].'</span></div>';
-		} else {
-			$rstyle = "active";
-			if(!is_null($row[5])){
-				//this answer got votes	
-				$rstyle = "info";
-			}
-			if($row[3] == $row[7]){
-				//this is the correct answer
-				$rstyle = "success";
-			}			
-			echo '</div></div><div class="row">';
-			echo '	<div class="col-xs-3 text-center alert alert-'.$rstyle.'">'.$row[2].'<span class="badge">'.$row[4].'</span></div>';
-			echo '	<div class="col-xs-6 alert alert-'.$rstyle.'">'.$row[1].'</div>';
-			echo '	<div class="col-xs-3"><div class="row"><span class="label label-'.$rstyle.'">'.$row[5].'</span></div>';
-			$previd = $row[0];
-		}
-
-	}
-	echo '</div></div>';
-}
-
 
 mysqli_close($con);
 ?>
-
+<br>
 <div id="footer" class="container text-center"><button type="button" class="btn btn-info" onclick="returnLobby()">Return to the Lobby</button></div>
 <div id="footer" class="container text-center"><button type="button" class="btn btn-warning" onclick="if(confirm('You want to Quit?')){mainMenu(1)}">Quit to Main</button></div>
 </body>
