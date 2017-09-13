@@ -6,6 +6,7 @@
 <body>
 <?php
 include 'db_config.php';
+session_name('things');
 session_start();
 if (!isset($_SESSION['Player_ID'])){
 	die('Session lost, please reload the app.');
@@ -81,7 +82,7 @@ if($gamestate != "complete"){
 		while($row = mysqli_fetch_row($result)){
 			echo '<div class="container well well-sm">'.$row[0].'</div>';
 		}
-		echo '<div class="container text-center"><button type="button" class="btn btn-info" onclick="showAll()"Done reading, show all players the options</button></div>';
+		echo '<div class="container text-center"><button type="button" class="btn btn-info" onclick="showAll()">Done reading, show all players the options</button></div>';
 	}
 	
 

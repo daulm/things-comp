@@ -6,6 +6,7 @@
 <body>
 <?php
 include 'db_config.php';
+session_name('things');
 session_start();
 if (!isset($_SESSION['Player_ID'])){
 	die('Session lost, please reload the app.');
@@ -31,11 +32,11 @@ if(isset($_SESSION['Host'])){
 		}
 		
 		//create new game 
-		$sql = "INSERT INTO games g (g.LobbyID, g.ReaderID) VALUES (";
+		$sql = "INSERT INTO games (LobbyID, ReaderID) VALUES (";
 		$sql .= $_SESSION['Lobby_ID'].", (SELECT IF(ISNULL(MIN(p.PlayerID)),";
 		$sql .= " (SELECT MIN(f.PlayerID) FROM players f WHERE f.LobbyID=".$_SESSION['Lobby_ID']."), MIN(p.PlayerID))";
-		$sql .= "FROM players p, lobby l, games g1 WHERE g1.GameID = l.GameID AND l.LobbyID=".$_SESSION['Lobby_ID'];
-		$sql .= "AND p.LobbyID =".$_SESSION['Lobby_ID']." AND p.PlayerID > g1.ReaderID))";
+		$sql .= " FROM players p, lobby l, games g1 WHERE g1.GameID = l.GameID AND l.LobbyID=".$_SESSION['Lobby_ID'];
+		$sql .= " AND p.LobbyID =".$_SESSION['Lobby_ID']." AND p.PlayerID > g1.ReaderID))";
 		if(!mysqli_query($con, $sql)){
 			echo('Unable to create Game');
 		}
@@ -56,7 +57,7 @@ if(isset($_SESSION['Host'])){
 
 //set the gameid and readerid to the session
 $sql = "SELECT l.GameID, g.ReaderID FROM lobby l, games g";
-$sql .= " WHERE g.GameID - l.GameID l.LobbyID=".$_SESSION['Lobby_ID'];
+$sql .= " WHERE g.GameID = l.GameID AND l.LobbyID=".$_SESSION['Lobby_ID'];
 if(!$result = mysqli_query($con, $sql)){
 	echo('Cant find code for this lobby');
 }	

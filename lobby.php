@@ -7,6 +7,7 @@
 <?php
 include 'db_config.php';
 
+session_name('things');
 session_start();
 if (!isset($_SESSION['Player_ID'])){
 	die('Session lost, please reload the app.');
@@ -53,7 +54,8 @@ switch ($action_type){
 		}
 		
 		//update the current lobby the player is in and their name
-		$sql = "UPDATE players SET LobbyID=".$_SESSION['Lobby_ID'].", PlayerName='".mysql_real_escape_string($_POST['pname'])."'";
+		$sq_pname = mysqli_real_escape_string($con, $_POST['pname']);
+		$sql = "UPDATE players SET LobbyID=".$_SESSION['Lobby_ID'].", PlayerName='".$sq_pname."'";
 		$sql .= " WHERE PlayerID=".$_SESSION['Player_ID'];
 		if(!mysqli_query($con, $sql)){
 			echo('Unable to add player ID to the lobby');
@@ -63,7 +65,8 @@ switch ($action_type){
 		break;
 	case "join":
 		// check that the code is correct and the lobby was created in the past 24 hours
-		$sql = "SELECT MAX(LobbyID) FROM lobby WHERE Code=UPPER('".mysql_real_escape_string($_POST['code'])."') AND CreationTime > DATE_SUB(NOW(), INTERVAL 24 HOUR)";
+		$sq_code = mysqli_real_escape_string($con, $_POST['code']);
+		$sql = "SELECT MAX(LobbyID) FROM lobby WHERE Code=UPPER('".$sq_code."') AND CreationTime > DATE_SUB(NOW(), INTERVAL 24 HOUR)";
 		if(!$result = mysqli_query($con, $sql)){
 			echo('Cant find a Lobby with the given code.');
 		}		
@@ -108,13 +111,6 @@ switch ($action_type){
 		if(!mysqli_query($con, $sql)){
 			echo('Unable to check in player');
 		}
-		break;
-	case "settings":
-		$sql = "UPDATE lobby SET AnswerTime=".mysql_real_escape_string($_POST['anstime']).", VoteTime=".mysql_real_escape_string($_POST['votetime']);
-		$sql .= " WHERE HostID=".$_SESSION['Player_ID']." AND LobbyID=".$_SESSION['Lobby_ID'];
-		if(!mysqli_query($con, $sql)){
-			echo('Unable to add player ID to the lobby');
-		}		
 		break;
 	case "return":
 		if(isset($_SESSION['Host'])){
@@ -174,7 +170,7 @@ echo '</div><br>';
 if(isset($_SESSION['Host'])){
 	//show form for settings and button for kick off
 	?>
-	<div class="container-fluid well well-sm row settings" id="settings">
+	<div class="container-fluid text-center well well-sm row settings" id="settings">
 			<button type="submit" class="btn btn-info" onclick="launchGame()">Start Round</span></button>
 	</div>
 	<?php

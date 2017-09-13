@@ -3,6 +3,7 @@
 include 'db_config.php';
 
 // First check and see if the player was in a Lobby, then remove them from the Lobby
+session_name('things');
 session_start();
 // establish connection to DB
 $con = mysqli_connect($db_host, $db_username, $db_pw, 'things');
