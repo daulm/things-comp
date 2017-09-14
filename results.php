@@ -25,22 +25,27 @@ switch ($action_type){
 		if(!mysqli_query($con, $sql)){
 			echo('Unable to submit the answer');
 		}
+		break;
 	case "endans":		
 		$doneans = TRUE;
 		//We could have a query here that pulls players from the lobby who haven't submitted answers
 		// otherwise answers and players might pop in after the rest of the answers were read
-		
+		$sql = "UPDATE lobby SET GameState='closed' WHERE LobbyID=".$_SESSION['Lobby_ID'];
+		if(!mysqli_query($con, $sql)){
+			echo('Unable to mark game as closed');
+		}		
 		break;
 	case "showall":
 		$sql = "UPDATE lobby SET GameState='complete' WHERE LobbyID=".$_SESSION['Lobby_ID'];
 		if(!mysqli_query($con, $sql)){
 			echo('Unable to mark game as complete');
 		}
+		break;
 	default:
 }
 	
 //check the game state
-$sql = "SELECT GameState FROM Lobby WHERE LobbyID=".$_SESSION['Lobby_ID'];
+$sql = "SELECT GameState FROM lobby WHERE LobbyID=".$_SESSION['Lobby_ID'];
 if(!$result = mysqli_query($con, $sql)){
 	echo('Unable to check the game state');
 }
@@ -72,6 +77,9 @@ if($gamestate != "complete"){
 			//show the button to end the answer window
 			echo '<div class="container text-center"><button type="button" class="btn btn-danger" onclick="endAnswers()">End time for submitting answers</button></div>';
 		}
+	}
+	if($gamestate == "closed"){
+		$doneans = TRUE;
 	}
 	if($_SESSION['Reader_ID'] == $_SESSION['Player_ID'] && $doneans){
 		//view list of answers to be read out

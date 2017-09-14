@@ -76,7 +76,7 @@ mysqli_close($con);
 <body>
 
 <div id="titleback">
-	<div class="text-center" id="title">Game of Things</div>
+	<div class="text-center" id="title">The Game of Things</div>
 	<span id="msglist" data-gamestate="<?php echo $gamestate ?>"></span>
 </div>
 

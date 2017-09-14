@@ -33,6 +33,9 @@ function mainMenu(mode){
 			case "complete":
 				showResults();
 				break;
+			case "closed":
+				showResults();
+				break;
 			default:
 		
 		}
@@ -165,6 +168,7 @@ function showAll(){
 			$("#bd_content").html(result);
 		}
 	});
+	
 }
 
 function endAnswers(){
@@ -172,7 +176,7 @@ function endAnswers(){
 		if (refresh_results){
 			$("#bd_content").html(result);
 		}
-	});
+	});	
 }	
 
 </script>

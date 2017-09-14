@@ -20,7 +20,7 @@ if (!$con){
 //if host, set up new game and change game state of lobby
 if(isset($_SESSION['Host'])){
 	//check if the game was already created
-	$sql = "SELECT * FROM Lobby WHERE GameState='answer' AND LobbyID=".$_SESSION['Lobby_ID'];
+	$sql = "SELECT * FROM lobby WHERE GameState='answer' AND LobbyID=".$_SESSION['Lobby_ID'];
 	if(!$result = mysqli_query($con, $sql)){
 		echo('Unable to check if we already created game');
 	}
@@ -35,7 +35,7 @@ if(isset($_SESSION['Host'])){
 		$sql = "INSERT INTO games (LobbyID, ReaderID) VALUES (";
 		$sql .= $_SESSION['Lobby_ID'].", (SELECT IF(ISNULL(MIN(p.PlayerID)),";
 		$sql .= " (SELECT MIN(f.PlayerID) FROM players f WHERE f.LobbyID=".$_SESSION['Lobby_ID']."), MIN(p.PlayerID))";
-		$sql .= " FROM players p, lobby l, games g1 WHERE g1.GameID = l.GameID AND l.LobbyID=".$_SESSION['Lobby_ID'];
+		$sql .= " FROM players p, games g1 WHERE g1.GameID =(SELECT MAX(g2.GameID) FROM games g2 WHERE g2.LobbyID=".$_SESSION['Lobby_ID'].")";
 		$sql .= " AND p.LobbyID =".$_SESSION['Lobby_ID']." AND p.PlayerID > g1.ReaderID))";
 		if(!mysqli_query($con, $sql)){
 			echo('Unable to create Game');
