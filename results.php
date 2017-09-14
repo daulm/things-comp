@@ -20,8 +20,9 @@ $action_type = $_GET['mode'];
 switch ($action_type){
 	case "submit":
 		// Add the answer
+		$sq_ans = mysqli_real_escape_string($con, $_POST['ans']);
 		$sql = "INSERT IGNORE INTO answers (GameID, PlayerID, AnswerText, OrderVal) VALUES (";
-		$sql .= $_SESSION['Game_ID'].", ".$_SESSION['Player_ID'].", '".mysql_real_escape_string($_POST['ans'])."', RAND())";
+		$sql .= $_SESSION['Game_ID'].", ".$_SESSION['Player_ID'].", '".$sq_ans."', RAND())";
 		if(!mysqli_query($con, $sql)){
 			echo('Unable to submit the answer');
 		}

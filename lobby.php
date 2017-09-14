@@ -78,8 +78,8 @@ switch ($action_type){
 		while($row = mysqli_fetch_row($result)){
 			$_SESSION['Lobby_ID'] = $row[0];
 		}
-		$code = mysql_real_escape_string($_POST['code']);
-		$pname = mysql_real_escape_string($_POST['pname']);
+		$code = mysqli_real_escape_string($con, $_POST['code']);
+		$pname = mysqli_real_escape_string($con, $_POST['pname']);
 		//If a player already exists with the chosen name, add [the number of current players] to the end of their name
 		$sql = "SELECT p.PlayerName, (SELECT COUNT(*) FROM players WHERE LobbyID =".$_SESSION['Lobby_ID'].") as num";
 		$sql .= " FROM players p, lobby l";
