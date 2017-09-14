@@ -108,7 +108,7 @@ if($gamestate != "complete"){
 	}
 	echo '</div><div class="col-xs-8">';
 	//pull the answers
-	$sql = "SELECT AnswerText FROM Answers WHERE GameID=".$_SESSION['Game_ID']." ORDER BY OrderVal";
+	$sql = "SELECT AnswerText FROM answers WHERE GameID=".$_SESSION['Game_ID']." ORDER BY OrderVal";
 	if(!$result = mysqli_query($con, $sql)){
 		echo('Cant find the answers.');
 	}
